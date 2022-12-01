@@ -31,6 +31,12 @@ void *vector_push(void **vector);
 static int __pot(unsigned int x) {
   // from here (great read): https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
   x--; // decrement x (flip lowest bit)
+  // move all bits down while or'ing them in order to fill all
+  // lower bits with 1's, effectively making x 1 less than a
+  // power of 2
+  // ie.. 43 after x |= x >> 1 -> 0000000000111111 (63)
+  // this step continues, with no other bits changing, until a 1 is
+  // added at the end
   x |= x >> 1;  // x |= x / 2 * 1
   x |= x >> 2;  // x |= x / 2 * 2
   x |= x >> 4;  // x |= x / 2 * 4
