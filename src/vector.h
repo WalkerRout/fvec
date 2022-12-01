@@ -142,6 +142,7 @@ void *vector_push(void **vector) {
  *   - vector_pop_back();  -> return a copy of the value before length-1 in memcpy
  *   - vector_remove(int index); -> delete the given index from the vector
  *   - vector_clear(void *default_value) -> create a default value and pass its address to set everything to it
+ *   - vector_shrink_to(unsigned int new_length) -> drop all elements after new_length (easy with realloc)
  *   - ... more I can't think of right now
  *
  * - Implement a way to choose an allocator (ie... preprocessor defines to pick a malloc definition)
