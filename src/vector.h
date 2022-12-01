@@ -43,27 +43,27 @@ static int __pot(unsigned int x) {
 }
 
 void *vector_create(unsigned int element_size) {
-	VecData* v = calloc(1, sizeof(VecData));
+  VecData* v = calloc(1, sizeof(VecData));
   v->element_size = element_size;
   v->capacity = 0;
   v->length = 0;
-	v->bytes_alloc = v->capacity * element_size; // also 0
+  v->bytes_alloc = v->capacity * element_size; // also 0
 
-	return &v->buffer;
+  return &v->buffer;
 }
 
 void *vector_create_init(unsigned int element_size, unsigned int initial_size) {
   initial_size = __pot(initial_size);
   
-	VecData* v = calloc(1, sizeof(VecData) + initial_size * element_size);
+  VecData* v = calloc(1, sizeof(VecData) + initial_size * element_size);
   v->element_size = element_size;
   v->capacity = initial_size; // create a capacity rounded up to a multiple of 2 from initial_size
   v->length = 0;
-	v->bytes_alloc = v->capacity * element_size; // also 0
+  v->bytes_alloc = v->capacity * element_size; // also 0
 
   //printf("Closest upwards power of 2: %u\n", __pot(initial_size));
   
-	return &v->buffer;
+  return &v->buffer;
 }
 
 void vector_free(void **vector) {
