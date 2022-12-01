@@ -29,6 +29,7 @@ void *vector_push(void **vector);
 
 // calculate the nearest power of 2 and round up specifically for 32 bit unsigned integers
 static int __pot(unsigned int x) {
+  // from here (great read): https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
   x--; // decrement x (flip lowest bit)
   x |= x >> 1;  // x |= x / 2 * 1
   x |= x >> 2;  // x |= x / 2 * 2
