@@ -11,13 +11,13 @@ typedef struct _VecData {
 } VecData;
 
 void *vector_create(unsigned int element_size) {
-	VecData* v = calloc(1, sizeof(VecData) + element_size);
+  VecData* v = calloc(1, sizeof(VecData) + element_size);
   v->element_size = element_size;
   v->capacity = 0;
   v->length = 0;
-	v->bytes_alloc = v->capacity * element_size; // also 0
+  v->bytes_alloc = v->capacity * element_size; // also 0
 
-	return &v->buffer;
+  return &v->buffer;
 }
 
 VecData *vector_get_data(void *vector) {
