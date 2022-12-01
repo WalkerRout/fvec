@@ -1,3 +1,4 @@
+
 #ifndef VECTOR_H
 #define VECTOR_H
 
@@ -23,16 +24,44 @@ void *vector_push(void **vector);
 #endif // VECTOR_H
 
 
+
 #ifdef VECTOR_IMPLEMENTATION
 
+// calculate the nearest power of 2 and round up specifically for 32 bit unsigned integers
+static int __pot(unsigned int x) {
+  x--; // decrement x (flip lowest bit)
+  x |= x >> 1;  // x |= x / 2 * 1
+  x |= x >> 2;  // x |= x / 2 * 2
+  x |= x >> 4;  // x |= x / 2 * 4
+  x |= x >> 8;  // x |= x / 2 * 8
+  x |= x >> 16; // x |= x / 2 * 16
+  x++;
+
+  return x;
+}
+
 void *vector_create(unsigned int element_size) {
-  VecData* v = calloc(1, sizeof(VecData) + element_size);
+	VecData* v = calloc(1, sizeof(VecData));
   v->element_size = element_size;
   v->capacity = 0;
   v->length = 0;
-  v->bytes_alloc = v->capacity * element_size; // also 0
+	v->bytes_alloc = v->capacity * element_size; // also 0
 
-  return &v->buffer;
+	return &v->buffer;
+}
+
+void *vector_create_init(unsigned int element_size, unsigned int initial_size) {
+  initial_size = __pot(initial_size);
+  
+	VecData* v = calloc(1, sizeof(VecData) + initial_size * element_size);
+  v->element_size = element_size;
+  v->capacity = initial_size; // create a capacity rounded up to a multiple of 2 from initial_size
+  v->length = 0;
+	v->bytes_alloc = v->capacity * element_size; // also 0
+
+  //printf("Closest upwards power of 2: %u\n", __pot(initial_size));
+  
+	return &v->buffer;
 }
 
 void vector_free(void **vector) {
@@ -75,16 +104,28 @@ void vector_expand(VecData **v_data) {
 
 void *vector_push(void **vector) {
   VecData *v_data = vector_get_data(*vector);
+
   
-  if(!vector_has_space(v_data)){
+  if(!vector_has_space(v_data)) {
+    vector_expand(&v_data);
+  }
+
+  v_data->length += 1;
+  if(!vector_has_space(v_data)) {
     vector_expand(&v_data);
   }
 
   // make sure to increment the length
-  //v_data->length += 1;
   *vector = &v_data->buffer;
-  // return a void pointer to the next available slot in the vector
-  return *vector + v_data->element_size * v_data->length++;
+  // return a void pointer to the next available slot in the vector (0 indexed, sub1)
+  void *res = *vector + v_data->element_size * (v_data->length-1);
+
+  // is the new increase in length invalid?
+  if(!vector_has_space(v_data)){
+    vector_expand(&v_data);
+  }
+  
+  return res;
 }
 
 #endif // VECTOR_IMPLEMENTATION
@@ -99,3 +140,4 @@ void *vector_push(void **vector) {
  *
  * - Implement a way to choose an allocator (ie... preprocessor defines to pick a malloc definition)
  */
+
