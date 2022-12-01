@@ -115,7 +115,6 @@ void vector_expand(VecData **v_data) {
 
 void *vector_push(void **vector) {
   VecData *v_data = vector_get_data(*vector);
-
   
   if(!vector_has_space(v_data)) {
     vector_expand(&v_data);
