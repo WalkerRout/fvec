@@ -15,11 +15,16 @@ typedef struct _VecData {
 } VecData;
 
 void *vector_create(unsigned int element_size);
+void *vector_create_init(unsigned int element_size, unsigned int initial_size);
 void vector_free(void **vector);
-VecData *vector_get_data(void *vector);
-int vector_has_space(VecData *v_data);
-void vector_expand(VecData **v_data);
 void *vector_push(void **vector);
+
+/*
+ * Static Functions:
+ * static VecData *vector_get_data(void *vector);
+ * static int vector_has_space(VecData *v_data);
+ * static void vector_expand(VecData **v_data);
+ */
 
 #endif // VECTOR_H
 
@@ -29,14 +34,7 @@ void *vector_push(void **vector);
 
 // calculate the nearest power of 2 and round up specifically for 32 bit unsigned integers
 static int __pot(unsigned int x) {
-  // from here (great read): https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
   x--; // decrement x (flip lowest bit)
-  // move all bits down while or'ing them in order to fill all
-  // lower bits with 1's, effectively making x 1 less than a
-  // power of 2
-  // ie.. 43 after x |= x >> 1 -> 0000000000111111 (63)
-  // this step continues, with no other bits changing, until a 1 is
-  // added at the end
   x |= x >> 1;  // x |= x / 2 * 1
   x |= x >> 2;  // x |= x / 2 * 2
   x |= x >> 4;  // x |= x / 2 * 4
@@ -48,27 +46,27 @@ static int __pot(unsigned int x) {
 }
 
 void *vector_create(unsigned int element_size) {
-  VecData* v = calloc(1, sizeof(VecData));
+	VecData* v = calloc(1, sizeof(VecData));
   v->element_size = element_size;
   v->capacity = 0;
   v->length = 0;
-  v->bytes_alloc = v->capacity * element_size; // also 0
+	v->bytes_alloc = v->capacity * element_size; // also 0
 
-  return &v->buffer;
+	return &v->buffer;
 }
 
 void *vector_create_init(unsigned int element_size, unsigned int initial_size) {
   initial_size = __pot(initial_size);
   
-  VecData* v = calloc(1, sizeof(VecData) + initial_size * element_size);
+	VecData* v = calloc(1, sizeof(VecData) + initial_size * element_size);
   v->element_size = element_size;
   v->capacity = initial_size; // create a capacity rounded up to a multiple of 2 from initial_size
   v->length = 0;
-  v->bytes_alloc = v->capacity * element_size; // also 0
+	v->bytes_alloc = v->capacity * element_size; // also 0
 
   //printf("Closest upwards power of 2: %u\n", __pot(initial_size));
   
-  return &v->buffer;
+	return &v->buffer;
 }
 
 void vector_free(void **vector) {
@@ -77,7 +75,7 @@ void vector_free(void **vector) {
   *vector = NULL;
 }
 
-VecData *vector_get_data(void *vector) {
+static VecData *vector_get_data(void *vector) {
   // total hack for pointer arithmetic
   // cast vector to VecData*, then index back by 1
   // as the pointer being indexed is of type VecData,
@@ -85,12 +83,12 @@ VecData *vector_get_data(void *vector) {
   return &((VecData *)vector)[-1];
 }
 
-int vector_has_space(VecData *v_data) {
+static int vector_has_space(VecData *v_data) {
   //assert(v_data->bytes_alloc == (v_data->capacity * v_data->element_size));
   return (v_data->bytes_alloc - (v_data->length * v_data->element_size)) > 0;
 }
 
-void vector_expand(VecData **v_data) {
+static void vector_expand(VecData **v_data) {
   assert((*v_data)->capacity >= (*v_data)->length);
   assert((*v_data)->bytes_alloc == ((*v_data)->capacity * (*v_data)->element_size));
 
@@ -147,4 +145,3 @@ void *vector_push(void **vector) {
  *
  * - Implement a way to choose an allocator (ie... preprocessor defines to pick a malloc definition)
  */
-
