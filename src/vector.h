@@ -19,12 +19,9 @@ void *vector_create_init(unsigned int element_size, unsigned int initial_size);
 void vector_free(void **vector);
 void *vector_push(void **vector);
 
-/*
- * Static Functions:
- * static VecData *vector_get_data(void *vector);
- * static int vector_has_space(VecData *v_data);
- * static void vector_expand(VecData **v_data);
- */
+VecData *vector_get_data(void *vector);
+int vector_has_space(VecData *v_data);
+void vector_expand(VecData **v_data);
 
 #endif // VECTOR_H
 
@@ -75,7 +72,7 @@ void vector_free(void **vector) {
   *vector = NULL;
 }
 
-static VecData *vector_get_data(void *vector) {
+VecData *vector_get_data(void *vector) {
   // total hack for pointer arithmetic
   // cast vector to VecData*, then index back by 1
   // as the pointer being indexed is of type VecData,
@@ -83,12 +80,12 @@ static VecData *vector_get_data(void *vector) {
   return &((VecData *)vector)[-1];
 }
 
-static int vector_has_space(VecData *v_data) {
+int vector_has_space(VecData *v_data) {
   //assert(v_data->bytes_alloc == (v_data->capacity * v_data->element_size));
   return (v_data->bytes_alloc - (v_data->length * v_data->element_size)) > 0;
 }
 
-static void vector_expand(VecData **v_data) {
+void vector_expand(VecData **v_data) {
   assert((*v_data)->capacity >= (*v_data)->length);
   assert((*v_data)->bytes_alloc == ((*v_data)->capacity * (*v_data)->element_size));
 
