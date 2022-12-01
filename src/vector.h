@@ -31,14 +31,23 @@ void vector_expand(VecData **v_data);
 
 // calculate the nearest power of 2 and round up specifically for 32 bit unsigned integers
 static int __pot(unsigned int x) {
+  // from here (great read): https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+  
+  // move all bits down while or'ing them in order to fill all
+  // lower bits with 1's, effectively making x 1 less than a
+  // power of 2
+  // ie.. 43 after x |= x >> 1 -> 0000000000111111 (63)
+  // this step continues, with no other bits changing, until a 1 is
+  // added at the end
+  
   x--; // decrement x (flip lowest bit)
-  x |= x >> 1;  // x |= x / 2 * 1
-  x |= x >> 2;  // x |= x / 2 * 2
-  x |= x >> 4;  // x |= x / 2 * 4
-  x |= x >> 8;  // x |= x / 2 * 8
-  x |= x >> 16; // x |= x / 2 * 16
-  x++;
-
+  x |= x >> 1;
+  x |= x >> 2;
+  x |= x >> 4;
+  x |= x >> 8;
+  x |= x >> 16;
+  x++; // round up to power of 2
+  
   return x;
 }
 
@@ -121,11 +130,6 @@ void *vector_push(void **vector) {
   *vector = &v_data->buffer;
   // return a void pointer to the next available slot in the vector (0 indexed, sub1)
   void *res = *vector + v_data->element_size * (v_data->length-1);
-
-  // is the new increase in length invalid?
-  if(!vector_has_space(v_data)){
-    vector_expand(&v_data);
-  }
   
   return res;
 }
