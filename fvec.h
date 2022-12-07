@@ -34,7 +34,6 @@ extern "C" {
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 // -----------------------------------------
 
 // -----------------------------------------
@@ -67,6 +66,7 @@ FVECDEF void *fvec_get(void *vector, unsigned int index);
 FVECDEF void *fvec_push(void **vector);
 FVECDEF void fvec_pop_back(void **vector);
 FVECDEF void fvec_map(void *vector, void(*func)(void*));
+FVECDEF void fvec_filter(void **dest_vector, void *src_vector, int(*predicate)(void*));
 FVECDEF void fvec_foldr(void *vector, void *base, void(*binop)(void*, void*));
 FVECDEF unsigned int fvec_length(void *vector);
 FVECDEF void fvec_free(void **vector);
@@ -298,7 +298,7 @@ FVECDEF void fvec_pop_back(void **vector) {
 }
 
 /*
-** @brief:   Maps a function of type :: Void -> Void* onto each element of a fat pointer vector
+** @brief:   Maps a function onto each element of a fat pointer vector
 ** @params:  vector {void *} - fat pointer vector to map, func {void (*)(void*)} - function to apply to each vector element
 ** @returns: N/A
 */
@@ -311,6 +311,23 @@ FVECDEF void fvec_map(void *vector, void (*func)(void*)) {
 }
 
 /*
+** @brief:   Push items that meet a predicate to the back of a destination vector
+** @params:  dest_vector {void *} - target the elements are inserted into, src_vector {void *} - vector being filtered, func {void(*)(void*)} - a predicate to apply to each element of src_vector
+** @returns: N/A
+*/
+FVECDEF void fvec_filter(void **dest_vector, void *src_vector, int(*predicate)(void*)) {
+  assert(*dest_vector);
+  assert(src_vector);
+  FVecData *v_data = fvec_get_data(src_vector);
+
+  for(int i = 0; i < v_data->length; ++i) {
+    void *curr = src_vector + i * v_data->element_size;
+    if(predicate(curr))
+      memcpy(fvec_push(dest_vector), curr, v_data->element_size);
+  }
+}
+
+/*
 ** @brief:   Perform a right fold over a vector using a recursive base value and binary operator
 ** @params:  vector {void *} - fat pointer vector to fold, base {void *} - what would be the result of the natural recursion, func {void (*)(void*, void*)} - binary function to fold over each element, storing the current result in the 2nd argument (base)
 ** @returns: N/A
@@ -320,7 +337,7 @@ FVECDEF void fvec_foldr(void *vector, void *base, void(*binop)(void*, void*)) {
   FVecData *v_data = fvec_get_data(vector);
 
   for(int i = 0; i < v_data->length; ++i)
-    binop(fvec_get(vector, i), base);
+    binop(fvec_get(vector, i), base); // vector still valid -> no reallocations yet
 }
 
 /*
