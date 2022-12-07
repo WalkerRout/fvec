@@ -1,40 +1,54 @@
-
-#include <time.h>
 #include <stdio.h>
-#include <string.h>
 
 #define FVEC_IMPLEMENTATION
-#include "../fvec.h"
+#include "fvec.h"
 #undef  FVEC_IMPLEMENTATION
+
+void triple(void *i) {
+  *(int*)i *= 3;
+}
+
+void sum(void *curr, void *rsf) {
+  *(int*)rsf += *(int*)curr;
+}
+
+int is_even(void *i) {
+  return *(int*)i % 2 == 0;
+}
 
 void print(void *i) {
   printf("%d ", *(int*)i);
 }
 
-void sum(void *curr, void *rsf) {
-  // add the current element onto the result of the natural recursion
-  *(int*)rsf += *(int*)curr;
-}
-
 int main(void) {
-  // this is not guaranteed to be null terminated...
-  // only fvec_* functions are safe on this string
-  int *test = fvec(sizeof(int));
-  *(int*)fvec_push(&test) = 1;
-  *(int*)fvec_push(&test) = 2;
-  *(int*)fvec_push(&test) = 3;
-  *(int*)fvec_push(&test) = 4;
-  *(int*)fvec_push(&test) = 5;
+  int *data = fvec(sizeof(int));
+  
+  *(int*)fvec_push(&data) = 9;
+  *(int*)fvec_push(&data) = -2;
+  *(int*)fvec_push(&data) = 1;
+  *(int*)fvec_push(&data) = 2;
+  *(int*)fvec_push(&data) = -4;
+  *(int*)fvec_push(&data) = 5;
+  
+  // triple all values in the vector
+  fvec_map(data, triple);
 
+  // 27 - 6 + 3 + 6 - 12 + 15 = 33, will print "Result is: 33"
   int result = 0;
-  fvec_foldr(test, &result, sum);
-
-  // 1 + 2 + 3 + 4 + 5 = 15
+  fvec_foldr(data, &result, sum);
   printf("Result is: %d\n", result);
 
-  fvec_print(test, print);
-  fvec_free(&test);
+  // grab all even number in the vector and insert them into the back of evens
+  int *evens = fvec(sizeof(int));
+  fvec_filter(&evens, data, is_even);
+  
+  // print the vectors using their print functions; a newline is automatically inserted following each print
+  fvec_print(data, print);
+  fvec_print(evens, print);
+ 
+  // free the data behind the vector
+  fvec_free(&data);
+  fvec_free(&evens);
   
   return 0;
 }
-
