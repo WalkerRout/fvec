@@ -35,23 +35,25 @@ int main(void) {
   *(int*)fvec_push(&data) = 4;
   fvec_pop_back(&data); // removes last (4), now [1, 2, 3], length = 3
   
-  // triple all values in the vector
+  // map a function to triple all values in the vector
   fvec_map(data, triple);
   
+  // fold a binary function over data to sum all values
   int result = 0;
-  fvec_fold(data, &result, sum);
-  // 3 + 6 + 9 = 18, will print "Result is: 18"
+  fvec_fold(data, &result, sum); // 3 + 6 + 9 = 18
   printf("Result is: %d\n", result);
   
+  // create a new vector filled with all odd numbers in data
   int *odds = fvec(sizeof(int));
   fvec_filter(&odds, data, is_odd);
   
-  
+  // print the vectors
   fvec_print(data, print);
   fvec_print(odds, print);
  
-  // free the data behind the vector
+  // free the data behind the vectors
   fvec_free(&data);
+  fvec_free(&odds);
   
   return 0;
 }
