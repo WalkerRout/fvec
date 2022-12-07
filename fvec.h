@@ -385,8 +385,6 @@ FVECDEF void fvec_print(void *vector, void(*print_func)(void*)) {
 /*
 ** TODO:
 ** - fvec_pop_front(); -> malloc and vector+sizeof(element) it in memcpy
-** - fvec_foldr(); -> binary function with rsf and current element
-** - fvec_filter(); -> no clue yet
 ** - fvec_remove(int index); -> delete the given index from the vector
 ** - fvec_clear(void *default_value) -> create a default value and pass its address to set everything to it
 ** - fvec_shrink_to(unsigned int new_length) -> drop all elements after new_length (easy with realloc)
