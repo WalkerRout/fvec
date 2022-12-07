@@ -36,6 +36,8 @@ int main(void) {
   
   int result = 0;
   fvec_foldr(data, &result, sum);
+  // 3 + 6 + 9 = 18, will print "Result is: 18"
+  printf("Result is: %d\n", result);
   
   // prints '3 6 9 \n' -> newline is automatically inserted
   // (might change later, but for now its convenient)
