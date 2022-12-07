@@ -18,6 +18,10 @@ void sum(void *curr, void *rsf) {
   *(int*)rsf += *(int*)curr;
 }
 
+int is_odd(void *i) {
+  return *(int*)i % 2 == 0;
+}
+
 void print(void *i) {
   printf("%d ", *(int*)i);
 }
@@ -35,13 +39,16 @@ int main(void) {
   fvec_map(data, triple);
   
   int result = 0;
-  fvec_foldr(data, &result, sum);
+  fvec_fold(data, &result, sum);
   // 3 + 6 + 9 = 18, will print "Result is: 18"
   printf("Result is: %d\n", result);
   
-  // prints '3 6 9 \n' -> newline is automatically inserted
-  // (might change later, but for now its convenient)
+  int *odds = fvec(sizeof(int));
+  fvec_filter(&odds, data, is_odd);
+  
+  
   fvec_print(data, print);
+  fvec_print(odds, print);
  
   // free the data behind the vector
   fvec_free(&data);
