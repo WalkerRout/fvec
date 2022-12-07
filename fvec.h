@@ -65,6 +65,7 @@ FVECDEF void *fvec_get(void *vector, unsigned int index);
 //FVECDEF void fvec_expand(FVecData **v_data);
 FVECDEF void *fvec_push(void **vector);
 FVECDEF void fvec_pop_back(void **vector);
+FVECDEF void fvec_pop_front(void **vector);
 FVECDEF void fvec_map(void *vector, void(*func)(void*));
 FVECDEF void fvec_filter(void **dest_vector, void *src_vector, int(*predicate)(void*));
 FVECDEF void fvec_fold(void *vector, void *base, void(*binop)(void*, void*));
@@ -298,6 +299,37 @@ FVECDEF void fvec_pop_back(void **vector) {
 }
 
 /*
+** @brief:   Remove the first element from a fat pointer vector, shrinking allocation if the length is a power of 2
+** @params:  vector {void **} - fat pointer vector to remove an element from
+** @returns: N/A
+*/
+FVECDEF void fvec_pop_front(void **vector) {
+  assert(vector);
+  FVecData *v_data = fvec_get_data(*vector);
+  assert(v_data->length > 0 && "Cannot pop an empty vector!");
+  
+  v_data->length -= 1;
+
+  memcpy(v_data->buffer, v_data->buffer + v_data->element_size, v_data->length * v_data->element_size);
+  
+  // if its a power of 2...
+  if(ceil(log2(v_data->length)) == floor(log2(v_data->length))) {
+    // know length is a power of two, capacity remains consistent
+    v_data->capacity = v_data->length;
+    v_data->bytes_alloc = v_data->element_size * v_data->length;
+    // shrink allocation
+    v_data = realloc(v_data, sizeof(FVecData) + v_data->bytes_alloc);
+    
+    if(v_data == NULL) {
+      fprintf(stderr, "Unable to reallocate vector after pop_back!\n");
+      exit(1);
+    }
+  }
+
+  *vector = &v_data->buffer;
+}
+
+/*
 ** @brief:   Maps a function onto each element of a fat pointer vector
 ** @params:  vector {void *} - fat pointer vector to map, func {void (*)(void*)} - function to apply to each vector element
 ** @returns: N/A
@@ -384,7 +416,6 @@ FVECDEF void fvec_print(void *vector, void(*print_func)(void*)) {
 
 /*
 ** TODO:
-** - fvec_pop_front(); -> malloc and vector+sizeof(element) it in memcpy
 ** - fvec_remove(int index); -> delete the given index from the vector
 ** - fvec_clear(void *default_value) -> create a default value and pass its address to set everything to it
 ** - fvec_shrink_to(unsigned int new_length) -> drop all elements after new_length (easy with realloc)
