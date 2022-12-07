@@ -1,2 +1,4 @@
 # fvec
-Dynamically sized vector in C, implemented using fat pointers
+> Dynamically sized vector in C, implemented using fat pointers
+
+**Run with `make`**
