@@ -35,7 +35,7 @@ int main(void) {
 
   // 27 - 6 + 3 + 6 - 12 + 15 = 33, will print "Result is: 33"
   int result = 0;
-  fvec_fold(data, &result, sum);
+  fvec_foldr(data, &result, sum);
   printf("Result is: %d\n", result);
 
   // grab all even number in the vector and insert them into the back of evens
