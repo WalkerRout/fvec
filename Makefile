@@ -1,7 +1,7 @@
 CC = gcc
 OBJS = src/*.c
 OBJ = bin/vector
-CFLAGS = 
+CFLAGS = -lm
 LIBS = 
 
 all: run

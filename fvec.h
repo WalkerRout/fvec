@@ -212,8 +212,6 @@ FVECDEF void fvec_expand(FVecData **v_data) {
   assert((*v_data)->capacity >= (*v_data)->length);
   assert((*v_data)->bytes_alloc == ((*v_data)->capacity * (*v_data)->element_size));
 
-  int old_bytes = sizeof(**v_data) + (*v_data)->bytes_alloc;
-  
   if((*v_data)->bytes_alloc == 0) {
     (*v_data)->capacity = 2;
     (*v_data)->bytes_alloc = (*v_data)->capacity * (*v_data)->element_size;
@@ -272,6 +270,11 @@ FVECDEF void fvec_pop_back(void **vector) {
     v_data->bytes_alloc = v_data->element_size * v_data->length;
     // shrink allocation
     v_data = realloc(v_data, sizeof(FVecData) + v_data->bytes_alloc);
+    
+    if(v_data == NULL) {
+      fprintf(stderr, "Unable to reallocate vector after pop_back!\n");
+      exit(1);
+    }
   }
 
   *vector = &v_data->buffer;
@@ -327,6 +330,10 @@ FVECDEF void fvec_print(void *vector, void(*print_func)(void*)) {
 // -----------------------------------------
 
 #endif // FVEC_IMPLEMENTATION
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
 
 /*
 ** TODO:

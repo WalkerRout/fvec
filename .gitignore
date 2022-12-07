@@ -1,6 +1,7 @@
 # Prerequisites
 *.d
 bin/
+.ccls-cache
 
 # Object files
 *.o
