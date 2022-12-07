@@ -14,6 +14,10 @@ void triple(void *i) {
   *(int*)i *= 3;
 }
 
+void sum(void *curr, void *rsf) {
+  *(int*)rsf += *(int*)curr;
+}
+
 void print(void *i) {
   printf("%d ", *(int*)i);
 }
@@ -29,6 +33,9 @@ int main(void) {
   
   // triple all values in the vector
   fvec_map(data, triple);
+  
+  int result = 0;
+  fvec_foldr(data, &result, sum);
   
   // prints '3 6 9 \n' -> newline is automatically inserted
   // (might change later, but for now its convenient)
