@@ -29,11 +29,14 @@ void print(void *i) {
 int main(void) {
   int *data = fvec(sizeof(int));
   
+  *(int*)fvec_push(&data) = 0;
   *(int*)fvec_push(&data) = 1;
   *(int*)fvec_push(&data) = 2;
   *(int*)fvec_push(&data) = 3;
   *(int*)fvec_push(&data) = 4;
-  fvec_pop_back(&data); // removes last (4), now [1, 2, 3], length = 3
+  
+  fvec_pop_back(&data); // removes last (4), now [0, 1, 2, 3], length = 4
+  fvec_pop_front(&data); // removes first (0), now [1, 2, 3], length = 3
   
   // map a function to triple all values in the vector
   fvec_map(data, triple);
