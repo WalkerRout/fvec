@@ -1,43 +1,32 @@
 
+#include <time.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
+#include <string.h>
 
-#define VECTOR_IMPLEMENTATION
-#include "vector.h"
-#undef VECTOR_IMPLEMENTATION
+#define FVEC_IMPLEMENTATION
+#include "../fvec.h"
+#undef  FVEC_IMPLEMENTATION
+
+char *make_string(char *lit) {
+  char *str = fvecci(sizeof(char), strlen(lit));
+
+  while(*lit != '\0')
+    *(char*)fvec_push((void**)&str) = *lit++;
+  
+  return str;
+}
+
+void print(void *c) {
+  printf("%c", *(char*)c);
+}
 
 int main(void) {
-  // create fat pointer
-  int *is = vector_create(sizeof(int));
+  // this is not guaranteed to be null terminated...
+  // only fvec_* functions are safe on this string
+  char *test = make_string("This is a test string");
 
-  // fill fat pointer (allocating new memory when necessary)
-  for(int i = 0; i < 55; i++) {
-    *(int*)vector_push(&is) = i;
-  }
-  // print guts
-  for(int i = 0; i < 55; i++) {
-    printf("Vector at %d: %d\n", i, is[i]);
-  }
-  
-  // free fat pointer
-  free(vector_get_data(is));
-
-  // create initialized fat pointer with capacity of 100 and length 0
-  is = vector_create_init(sizeof(int), 100);
-
-  // fill fat pointer (not allocating any new memory, as the capacity is the nearest highest power of 2 from the given initial size)
-  for(int i = 0; i < 100; i++) {
-    is[i] = i;
-  }
-  // print guts (pt2)
-  for(int i = 0; i < 100; i++) {
-    printf("Vector at %d: %d\n", i, is[i]);
-  }
-
-  // free fat pointer
-  free(vector_get_data(is));
-  is = NULL;
+  fvec_print(test, print);
+  fvec_free((void**)&test);
   
   return 0;
 }
