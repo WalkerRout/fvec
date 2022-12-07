@@ -7,23 +7,30 @@
 #include "../fvec.h"
 #undef  FVEC_IMPLEMENTATION
 
-char *make_string(char *lit) {
-  char *str = fvecci(sizeof(char), strlen(lit));
-
-  while(*lit != '\0')
-    *(char*)fvec_push(&str) = *lit++;
-  
-  return str;
+void print(void *i) {
+  printf("%d ", *(int*)i);
 }
 
-void print(void *c) {
-  printf("%c", *(char*)c);
+void sum(void *curr, void *rsf) {
+  // add the current element onto the result of the natural recursion
+  *(int*)rsf += *(int*)curr;
 }
 
 int main(void) {
   // this is not guaranteed to be null terminated...
   // only fvec_* functions are safe on this string
-  char *test = make_string("This is a test string");
+  int *test = fvec(sizeof(int));
+  *(int*)fvec_push(&test) = 1;
+  *(int*)fvec_push(&test) = 2;
+  *(int*)fvec_push(&test) = 3;
+  *(int*)fvec_push(&test) = 4;
+  *(int*)fvec_push(&test) = 5;
+
+  int result = 0;
+  fvec_foldr(test, &result, sum);
+
+  // 1 + 2 + 3 + 4 + 5 = 15
+  printf("Result is: %d\n", result);
 
   fvec_print(test, print);
   fvec_free(&test);

@@ -61,11 +61,13 @@ typedef struct _FVecData FVecData;
 FVECDEF void *fvec(unsigned int element_size);
 FVECDEF void *fvecci(unsigned int element_size, unsigned int initial_size);
 FVECDEF FVecData *fvec_get_data(void *vector);
+FVECDEF void *fvec_get(void *vector, unsigned int index);
 //FVECDEF int fvec_has_space(FVecData *v_data);
 //FVECDEF void fvec_expand(FVecData **v_data);
 FVECDEF void *fvec_push(void **vector);
 FVECDEF void fvec_pop_back(void **vector);
 FVECDEF void fvec_map(void *vector, void(*func)(void*));
+FVECDEF void fvec_foldr(void *vector, void *base, void(*binop)(void*, void*));
 FVECDEF unsigned int fvec_length(void *vector);
 FVECDEF void fvec_free(void **vector);
 FVECDEF void fvec_print(void *vector, void(*print_func)(void*));
@@ -176,6 +178,21 @@ FVECDEF FVecData *fvec_get_data(void *vector) {
   // as the pointer being indexed is of type FVecData,
   // it decrements back to the address of the start of the structure
   return &((FVecData *)vector)[-1];
+}
+
+/*
+** @WARNING: !!! TAKE PRECAUTIONS THAT THE RETURN VALUE IS CAST TO THE PROPER DATATYPE !!!
+**
+** @brief:   Get an element out of a generic fat pointer vector
+** @params:  vector {void *} - fat pointer with desired element,
+** @returns: {void *} - element at target index
+*/
+FVECDEF void *fvec_get(void *vector, unsigned int index) {
+  assert(vector);
+  FVecData *v_data = fvec_get_data(vector);
+  assert(index < v_data->length && "Index out of bounds! Cannot access beyond length!");
+
+  return v_data->buffer + (index * v_data->element_size);
 }
 
 /*
@@ -291,6 +308,19 @@ FVECDEF void fvec_map(void *vector, void (*func)(void*)) {
   
   for(int i = 0; i < v_data->length; ++i)
     func(vector + i * v_data->element_size); // vector still valid -> no reallocations yet
+}
+
+/*
+** @brief:   Perform a right fold over a vector using a recursive base value and binary operator
+** @params:  vector {void *} - fat pointer vector to fold, base {void *} - what would be the result of the natural recursion, func {void (*)(void*, void*)} - binary function to fold over each element, storing the current result in the 2nd argument (base)
+** @returns: N/A
+*/
+FVECDEF void fvec_foldr(void *vector, void *base, void(*binop)(void*, void*)) {
+  assert(vector);
+  FVecData *v_data = fvec_get_data(vector);
+
+  for(int i = 0; i < v_data->length; ++i)
+    binop(fvec_get(vector, i), base);
 }
 
 /*
