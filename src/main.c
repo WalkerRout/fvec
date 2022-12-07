@@ -11,7 +11,7 @@ char *make_string(char *lit) {
   char *str = fvecci(sizeof(char), strlen(lit));
 
   while(*lit != '\0')
-    *(char*)fvec_push((void**)&str) = *lit++;
+    *(char*)fvec_push(&str) = *lit++;
   
   return str;
 }
@@ -26,7 +26,7 @@ int main(void) {
   char *test = make_string("This is a test string");
 
   fvec_print(test, print);
-  fvec_free((void**)&test);
+  fvec_free(&test);
   
   return 0;
 }
