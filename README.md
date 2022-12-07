@@ -19,7 +19,7 @@ void sum(void *curr, void *rsf) {
 }
 
 int is_odd(void *i) {
-  return *(int*)i % 2 == 0;
+  return *(int*)i % 2 == 1;
 }
 
 void print(void *i) {
