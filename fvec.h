@@ -67,7 +67,7 @@ FVECDEF void *fvec_push(void **vector);
 FVECDEF void fvec_pop_back(void **vector);
 FVECDEF void fvec_map(void *vector, void(*func)(void*));
 FVECDEF void fvec_filter(void **dest_vector, void *src_vector, int(*predicate)(void*));
-FVECDEF void fvec_foldr(void *vector, void *base, void(*binop)(void*, void*));
+FVECDEF void fvec_fold(void *vector, void *base, void(*binop)(void*, void*));
 FVECDEF unsigned int fvec_length(void *vector);
 FVECDEF void fvec_free(void **vector);
 FVECDEF void fvec_print(void *vector, void(*print_func)(void*));
@@ -332,7 +332,7 @@ FVECDEF void fvec_filter(void **dest_vector, void *src_vector, int(*predicate)(v
 ** @params:  vector {void *} - fat pointer vector to fold, base {void *} - what would be the result of the natural recursion, func {void (*)(void*, void*)} - binary function to fold over each element, storing the current result in the 2nd argument (base)
 ** @returns: N/A
 */
-FVECDEF void fvec_foldr(void *vector, void *base, void(*binop)(void*, void*)) {
+FVECDEF void fvec_fold(void *vector, void *base, void(*binop)(void*, void*)) {
   assert(vector);
   FVecData *v_data = fvec_get_data(vector);
 
