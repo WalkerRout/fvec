@@ -160,9 +160,11 @@ FVECHELP void fvec_expand(FVecData **_v_data) {
     v_data->bytes_alloc = v_data->capacity * v_data->element_size;
   }
 
-  //fprintf(stderr, "Reallocating from %d bytes to %d bytes!\n", old_bytes, sizeof(**v_data) + (*v_data)->bytes_alloc);
-
   *_v_data = realloc(*_v_data, sizeof(FVecData) + v_data->bytes_alloc);
+  if(*_v_data == NULL) {
+    fprintf(stderr, "Unable to reallocate vector after expanding vector!\n");
+    exit(1);
+  }
 }
 
 /*
@@ -182,9 +184,8 @@ FVECHELP void fvec_shrink(FVecData **_v_data) {
     v_data->bytes_alloc = v_data->element_size * v_data->length;
     // shrink allocation
     *_v_data = realloc(*_v_data, sizeof(FVecData) + v_data->bytes_alloc);
-    
     if(v_data == NULL) {
-      fprintf(stderr, "Unable to reallocate vector after pop_back!\n");
+      fprintf(stderr, "Unable to reallocate vector after shrinking vector!\n");
       exit(1);
     }
   }
@@ -204,6 +205,11 @@ FVECHELP void fvec_shrink(FVecData **_v_data) {
 */
 FVECDEF void *fvec(unsigned int element_size) {
   FVecData* v = calloc(1, sizeof(FVecData));
+  if(v == NULL) {
+    fprintf(stderr, "Unable to calloc vector in fvec!\n");
+    exit(1);
+  }
+  
   v->element_size = element_size;
   v->capacity = 0;
   v->length = 0;
@@ -221,6 +227,11 @@ FVECDEF void *fvecci(unsigned int element_size, unsigned int initial_size) {
   initial_size = pot(initial_size);
   
   FVecData* v = calloc(1, sizeof(FVecData) + initial_size * element_size);
+  if(v == NULL) {
+    fprintf(stderr, "Unable to calloc vector in fvecic!\n");
+    exit(1);
+  }
+  
   v->element_size = element_size;
   v->capacity = initial_size; // create a capacity rounded up to a multiple of 2 from initial_size
   v->length = 0;
