@@ -228,7 +228,7 @@ FVECDEF void *fvecci(unsigned int element_size, unsigned int initial_size) {
   
   FVecData* v = calloc(1, sizeof(FVecData) + initial_size * element_size);
   if(v == NULL) {
-    fprintf(stderr, "Unable to calloc vector in fvecic!\n");
+    fprintf(stderr, "Unable to calloc vector in fvecci!\n");
     exit(1);
   }
   
