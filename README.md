@@ -34,16 +34,18 @@ int main(void) {
   *(int*)fvec_push(&data) = 2;
   *(int*)fvec_push(&data) = 3;
   *(int*)fvec_push(&data) = 4;
+  *(int*)fvec_push(&data) = 5;
   
-  fvec_pop_back(&data); // removes last (4), now [0, 1, 2, 3], length = 4
-  fvec_pop_front(&data); // removes first (0), now [1, 2, 3], length = 3
+  fvec_pop(&data, 2); // removes element at index 2 (2), now [0, 1, 3, 4, 5]
+  fvec_pop_back(&data); // removes last (5), now [0, 1, 3, 4], length = 4
+  fvec_pop_front(&data); // removes first (0), now [1, 3, 4], length = 3
   
   // map a function to triple all values in the vector
-  fvec_map(data, triple);
+  fvec_map(data, triple); // [1, 3, 4] -> [3, 9, 12]
   
   // fold a binary function over data to sum all values
   int result = 0;
-  fvec_fold(data, &result, sum); // 3 + 6 + 9 = 18
+  fvec_fold(data, &result, sum); // <result> + 3 + 9 + 12 = 24
   printf("Result is: %d\n", result);
   
   // create a new vector filled with all odd numbers in data
