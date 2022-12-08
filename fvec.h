@@ -41,7 +41,8 @@ extern "C" {
 ** ACCESS MODIFIER DEFINES
 */
 #ifndef FVECDEF
-#define FVECDEF static inline
+// if want to make use of inline with FVEC_IMPLEMENTATION defined in another file, use: #define FVECDEF extern inline
+#define FVECDEF
 #endif // FVECDEF
   
 #ifndef FVECHELP
