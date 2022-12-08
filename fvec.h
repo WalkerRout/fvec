@@ -41,8 +41,7 @@ extern "C" {
 ** ACCESS MODIFIER DEFINES
 */
 #ifndef FVECDEF
-// static inline
-#define FVECDEF
+#define FVECDEF static inline
 #endif // FVECDEF
 // -----------------------------------------
 
