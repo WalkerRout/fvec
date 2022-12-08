@@ -12,8 +12,8 @@ void sum(void *curr, void *rsf) {
   *(int*)rsf += *(int*)curr;
 }
 
-int is_even(void *i) {
-  return *(int*)i % 2 == 0;
+int is_odd(void *i) {
+  return *(int*)i % 2 == 1;
 }
 
 void print(void *i) {
@@ -26,29 +26,30 @@ int main(void) {
   *(int*)fvec_push(&data) = 9;
   *(int*)fvec_push(&data) = -2;
   *(int*)fvec_push(&data) = 1;
+  fvec_pop_front(&data);
   *(int*)fvec_push(&data) = 2;
   *(int*)fvec_push(&data) = -4;
+  fvec_pop_back(&data);
   *(int*)fvec_push(&data) = 5;
+  *(int*)fvec_push(&data) = 57;
+
+  fvec_pop(&data, 3);
+  fvec_print(data, print);
   
-  // triple all values in the vector
   fvec_map(data, triple);
 
-  // 27 - 6 + 3 + 6 - 12 + 15 = 33, will print "Result is: 33"
   int result = 0;
   fvec_fold(data, &result, sum);
   printf("Result is: %d\n", result);
 
-  // grab all even number in the vector and insert them into the back of evens
-  int *evens = fvec(sizeof(int));
-  fvec_filter(&evens, data, is_even);
+  int *odds = fvec(sizeof(int));
+  fvec_filter(&odds, data, is_odd);
   
-  // print the vectors using their print functions; a newline is automatically inserted following each print
   fvec_print(data, print);
-  fvec_print(evens, print);
+  fvec_print(odds, print);
  
-  // free the data behind the vector
   fvec_free(&data);
-  fvec_free(&evens);
+  fvec_free(&odds);
   
   return 0;
 }

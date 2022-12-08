@@ -61,17 +61,21 @@ FVECDEF void *fvec(unsigned int element_size);
 FVECDEF void *fvecci(unsigned int element_size, unsigned int initial_size);
 FVECDEF FVecData *fvec_get_data(void *vector);
 FVECDEF void *fvec_get(void *vector, unsigned int index);
-//FVECDEF int fvec_has_space(FVecData *v_data);
-//FVECDEF void fvec_expand(FVecData **v_data);
 FVECDEF void *fvec_push(void **vector);
 FVECDEF void fvec_pop_back(void **vector);
 FVECDEF void fvec_pop_front(void **vector);
+FVECDEF void fvec_pop(void **vector, unsigned int index);
 FVECDEF void fvec_map(void *vector, void(*func)(void*));
 FVECDEF void fvec_filter(void **dest_vector, void *src_vector, int(*predicate)(void*));
 FVECDEF void fvec_fold(void *vector, void *base, void(*binop)(void*, void*));
 FVECDEF unsigned int fvec_length(void *vector);
 FVECDEF void fvec_free(void **vector);
 FVECDEF void fvec_print(void *vector, void(*print_func)(void*));
+// Helpers:
+// - static inline unsigned int pot(unsigned int x);
+// - static inline int fvec_has_space(FVecData *v_data);
+// - static inline void fvec_expand(FVecData **_v_data);
+// - static inline void fvec_shrink(FVecData **_v_data);
 // -----------------------------------------
 #endif // FVEC_H
 
@@ -99,8 +103,6 @@ typedef struct _FVecData {
 */
 
 /*
-** @WARNING: !!! THIS FUNCTION IS LOCAL TO THE FILE IN WHICH FVEC IS DEFINED !!!
-**
 ** @brief:   Produce the nearest highest power of two
 ** @params:  x {unsigned int} - initial value
 ** @returns: {unsigned int} - power of two closest to and greater than initial value
@@ -124,6 +126,64 @@ static inline unsigned int pot(unsigned int x) {
   x++; // round up to power of 2
   
   return x;
+}
+
+/*
+** @brief:   Check if a vector has space for another element
+** @params:  v_data {FVecData *} - vector to check
+** @returns: {int} - a boolean value representing whether or not the vector has space
+*/
+static inline int fvec_has_space(FVecData *v_data) {
+  //assert(v_data->bytes_alloc == (v_data->capacity * v_data->element_size));
+  return (v_data->bytes_alloc - (v_data->length * v_data->element_size)) > 0;
+}
+
+/*
+** @brief:   Expand a vector's allocation
+** @params:  _v_data {FVecData **} - the vector to expand
+** @returns: N/A
+*/
+static inline void fvec_expand(FVecData **_v_data) {
+  FVecData *v_data = *_v_data;
+  assert(v_data->capacity >= v_data->length);
+  assert(v_data->bytes_alloc == (v_data->capacity * v_data->element_size));
+
+  if(v_data->bytes_alloc == 0) {
+    v_data->capacity = 2;
+    v_data->bytes_alloc = v_data->capacity * v_data->element_size;
+  } else {
+    v_data->capacity *= 2;
+    v_data->bytes_alloc = v_data->capacity * v_data->element_size;
+  }
+
+  //fprintf(stderr, "Reallocating from %d bytes to %d bytes!\n", old_bytes, sizeof(**v_data) + (*v_data)->bytes_alloc);
+
+  *_v_data = realloc(*_v_data, sizeof(FVecData) + v_data->bytes_alloc);
+}
+
+/*
+** @brief:   Shrink a vector's allocation if the length is a power of 2
+** @params:  _v_data {FVecData **} - the vector to expand
+** @returns: N/A
+*/
+static inline void fvec_shrink(FVecData **_v_data) {
+  FVecData *v_data = *_v_data;
+  assert(v_data->capacity >= v_data->length);
+  assert(v_data->bytes_alloc == (v_data->capacity * v_data->element_size));
+
+  // if its a power of 2...
+  if(ceil(log2(v_data->length)) == floor(log2(v_data->length))) {
+    // know length is a power of two, capacity remains consistent
+    v_data->capacity = v_data->length;
+    v_data->bytes_alloc = v_data->element_size * v_data->length;
+    // shrink allocation
+    *_v_data = realloc(*_v_data, sizeof(FVecData) + v_data->bytes_alloc);
+    
+    if(v_data == NULL) {
+      fprintf(stderr, "Unable to reallocate vector after pop_back!\n");
+      exit(1);
+    }
+  }
 }
 
 // -----------------------------------------
@@ -212,38 +272,6 @@ FVECDEF void *fvec_clone(void *vector) {
 }
 
 /*
-** @brief:   Check if a vector has space for another element
-** @params:  v_data {FVecData *} - vector to check
-** @returns: {int} - a boolean value representing whether or not the vector has space
-*/
-FVECDEF int fvec_has_space(FVecData *v_data) {
-  //assert(v_data->bytes_alloc == (v_data->capacity * v_data->element_size));
-  return (v_data->bytes_alloc - (v_data->length * v_data->element_size)) > 0;
-}
-
-/*
-** @brief:   Expand a vector's allocation
-** @params:  v_data {FVecData **} - the vector to expand
-** @returns: N/A
-*/
-FVECDEF void fvec_expand(FVecData **v_data) {
-  assert((*v_data)->capacity >= (*v_data)->length);
-  assert((*v_data)->bytes_alloc == ((*v_data)->capacity * (*v_data)->element_size));
-
-  if((*v_data)->bytes_alloc == 0) {
-    (*v_data)->capacity = 2;
-    (*v_data)->bytes_alloc = (*v_data)->capacity * (*v_data)->element_size;
-  } else {
-    (*v_data)->capacity *= 2;
-    (*v_data)->bytes_alloc = (*v_data)->capacity * (*v_data)->element_size;
-  }
-
-  //fprintf(stderr, "Reallocating from %d bytes to %d bytes!\n", old_bytes, sizeof(**v_data) + (*v_data)->bytes_alloc);
-
-  *v_data = realloc(*v_data, sizeof(FVecData) + (*v_data)->bytes_alloc);
-}
-
-/*
 ** @brief:   Push a value into the vector
 ** @params:  vector {void **} - fat pointer vector to push into
 ** @returns: res {void *} - pointer to new address at the end of the vector
@@ -281,19 +309,7 @@ FVECDEF void fvec_pop_back(void **vector) {
   
   v_data->length -= 1;
   
-  // if its a power of 2...
-  if(ceil(log2(v_data->length)) == floor(log2(v_data->length))) {
-    // know length is a power of two, capacity remains consistent
-    v_data->capacity = v_data->length;
-    v_data->bytes_alloc = v_data->element_size * v_data->length;
-    // shrink allocation
-    v_data = realloc(v_data, sizeof(FVecData) + v_data->bytes_alloc);
-    
-    if(v_data == NULL) {
-      fprintf(stderr, "Unable to reallocate vector after pop_back!\n");
-      exit(1);
-    }
-  }
+  fvec_shrink(&v_data);
 
   *vector = &v_data->buffer;
 }
@@ -312,19 +328,36 @@ FVECDEF void fvec_pop_front(void **vector) {
 
   memcpy(v_data->buffer, v_data->buffer + v_data->element_size, v_data->length * v_data->element_size);
   
-  // if its a power of 2...
-  if(ceil(log2(v_data->length)) == floor(log2(v_data->length))) {
-    // know length is a power of two, capacity remains consistent
-    v_data->capacity = v_data->length;
-    v_data->bytes_alloc = v_data->element_size * v_data->length;
-    // shrink allocation
-    v_data = realloc(v_data, sizeof(FVecData) + v_data->bytes_alloc);
-    
-    if(v_data == NULL) {
-      fprintf(stderr, "Unable to reallocate vector after pop_back!\n");
-      exit(1);
-    }
+  fvec_shrink(&v_data);
+
+  *vector = &v_data->buffer;
+}
+
+/*
+** @brief:   Remove an element from a fat pointer vector, shrinking allocation if the length is a power of 2
+** @params:  vector {void **} - fat pointer vector to remove an element from, index {unsigned int} - index of element to remove
+** @returns: N/A
+*/
+FVECDEF void fvec_pop(void **vector, unsigned int index) {
+  assert(vector);
+  FVecData *v_data = fvec_get_data(*vector);
+  assert(v_data->length > 0 && "Cannot pop an empty vector!");
+  assert(index < v_data->length && "Index out of bounds! Cannot access beyond length!");
+
+  if(index == v_data->length-1) {
+    fvec_pop_back(vector);
+    return;
   }
+  
+  v_data->length -= 1;
+
+  void *dest = v_data->buffer + index*v_data->element_size;
+  void *src  = v_data->buffer + (1 + index)*v_data->element_size;
+  unsigned int length = v_data->length*v_data->element_size - index*v_data->element_size;
+
+  memcpy(dest, src, length);
+  
+  fvec_shrink(&v_data);
 
   *vector = &v_data->buffer;
 }
@@ -351,6 +384,8 @@ FVECDEF void fvec_filter(void **dest_vector, void *src_vector, int(*predicate)(v
   assert(*dest_vector);
   assert(src_vector);
   FVecData *v_data = fvec_get_data(src_vector);
+  FVecData *d_data = fvec_get_data(*dest_vector);
+  assert(d_data->element_size == v_data->element_size && "Elements must be of the same size!");
 
   for(int i = 0; i < v_data->length; ++i) {
     void *curr = src_vector + i * v_data->element_size;
@@ -416,9 +451,7 @@ FVECDEF void fvec_print(void *vector, void(*print_func)(void*)) {
 
 /*
 ** TODO:
-** - fvec_remove(int index); -> delete the given index from the vector
 ** - fvec_clear(void *default_value) -> create a default value and pass its address to set everything to it
-** - fvec_shrink_to(unsigned int new_length) -> drop all elements after new_length (easy with realloc)
 ** - ... more I can't think of right now
 **
 **
