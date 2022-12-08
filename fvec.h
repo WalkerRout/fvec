@@ -43,6 +43,10 @@ extern "C" {
 #ifndef FVECDEF
 #define FVECDEF static inline
 #endif // FVECDEF
+  
+#ifndef FVECHELP
+#define FVECHELP static inline
+#endif // FVECHELP
 // -----------------------------------------
 
 // -----------------------------------------
@@ -71,10 +75,10 @@ FVECDEF unsigned int fvec_length(void *vector);
 FVECDEF void fvec_free(void **vector);
 FVECDEF void fvec_print(void *vector, void(*print_func)(void*));
 // Helpers:
-// - static inline unsigned int pot(unsigned int x);
-// - static inline int fvec_has_space(FVecData *v_data);
-// - static inline void fvec_expand(FVecData **_v_data);
-// - static inline void fvec_shrink(FVecData **_v_data);
+// - FVECHELP unsigned int pot(unsigned int x);
+// - FVECHELP inline int fvec_has_space(FVecData *v_data);
+// - FVECHELP inline void fvec_expand(FVecData **_v_data);
+// - FVECHELP inline void fvec_shrink(FVecData **_v_data);
 // -----------------------------------------
 #endif // FVEC_H
 
@@ -106,7 +110,7 @@ typedef struct _FVecData {
 ** @params:  x {unsigned int} - initial value
 ** @returns: {unsigned int} - power of two closest to and greater than initial value
 */
-static inline unsigned int pot(unsigned int x) {
+FVECHELP unsigned int pot(unsigned int x) {
   // from here (great read): https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
   
   // move all bits down while or'ing them in order to fill all
@@ -132,7 +136,7 @@ static inline unsigned int pot(unsigned int x) {
 ** @params:  v_data {FVecData *} - vector to check
 ** @returns: {int} - a boolean value representing whether or not the vector has space
 */
-static inline int fvec_has_space(FVecData *v_data) {
+FVECHELP int fvec_has_space(FVecData *v_data) {
   //assert(v_data->bytes_alloc == (v_data->capacity * v_data->element_size));
   return (v_data->bytes_alloc - (v_data->length * v_data->element_size)) > 0;
 }
@@ -142,7 +146,7 @@ static inline int fvec_has_space(FVecData *v_data) {
 ** @params:  _v_data {FVecData **} - the vector to expand
 ** @returns: N/A
 */
-static inline void fvec_expand(FVecData **_v_data) {
+FVECHELP void fvec_expand(FVecData **_v_data) {
   FVecData *v_data = *_v_data;
   assert(v_data->capacity >= v_data->length);
   assert(v_data->bytes_alloc == (v_data->capacity * v_data->element_size));
@@ -165,7 +169,7 @@ static inline void fvec_expand(FVecData **_v_data) {
 ** @params:  _v_data {FVecData **} - the vector to expand
 ** @returns: N/A
 */
-static inline void fvec_shrink(FVecData **_v_data) {
+FVECHELP void fvec_shrink(FVecData **_v_data) {
   FVecData *v_data = *_v_data;
   assert(v_data->capacity >= v_data->length);
   assert(v_data->bytes_alloc == (v_data->capacity * v_data->element_size));
