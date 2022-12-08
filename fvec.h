@@ -453,6 +453,7 @@ FVECDEF void fvec_print(void *vector, void(*print_func)(void*)) {
 ** TODO:
 ** - fvec_clear(void *default_value) -> create a default value and pass its address to set everything to it
 ** - add no-resize functions for faster operations, ie... fvec_pop_back_nr() will not resize the vector if the allocation drops
+**   - maybe add a macro for no resize? ie... #define FVEC_NO_RESIZE and then #ifdef FVEC_NO_RESIZE #define fvec_pop fvec_pop_nr ... #endif
 ** - fvec_shrink_to_fit(); -> shrink the current allocation to fit the length
 ** - ...
 **
