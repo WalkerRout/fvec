@@ -89,6 +89,7 @@ FVECDEF void fvec_free(void **vector);
 FVECDEF void fvec_print(void *vector, void(*print_func)(void*));
 // Helpers:
 // - FVECHELP unsigned int pot(unsigned int x);
+// - FVECHELP int is_pot(unsigned int x);
 // - FVECHELP int fvec_has_space(FVecData *v_data);
 // - FVECHELP void fvec_expand(FVecData **_v_data);
 // - FVECHELP void __fvec_expand_nr(FVecData **_v_data); // feature flag
@@ -144,6 +145,15 @@ FVECHELP unsigned int pot(unsigned int x) {
   x++; // round up to power of 2
   
   return x;
+}
+
+/*
+** @brief:   Check if a number is a power of 2
+** @params:  x {unsigned int} - number to check
+** @returns: {int} - a boolean value representing whether or not the number is a power of 2
+*/
+FVECHELP int is_pot(unsigned int x) {
+  return ceil(log2(x)) == floor(log2(x));
 }
 
 /*
@@ -389,7 +399,7 @@ FVECDEF void fvec_pop_front(void **vector) {
   memcpy(v_data->buffer, v_data->buffer + v_data->element_size, v_data->length * v_data->element_size);
   
   // if its a power of 2...
-  if(ceil(log2(v_data->length)) == floor(log2(v_data->length))) {
+  if(is_pot(v_data->length)) {
     fvec_shrink(&v_data);
   }
 
