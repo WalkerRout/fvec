@@ -77,6 +77,7 @@ FVECDEF void *fvec_push(void **vector);
 FVECDEF void fvec_pop_back(void **vector);
 FVECDEF void fvec_pop_front(void **vector);
 FVECDEF void fvec_pop(void **vector, unsigned int index);
+FVECDEF void fvec_shrink_to_fit(void **vector);
 FVECDEF void fvec_map(void *vector, void(*func)(void*));
 FVECDEF void fvec_filter(void **dest_vector, void *src_vector, int(*predicate)(void*));
 FVECDEF void fvec_fold(void *vector, void *base, void(*binop)(void*, void*));
@@ -423,6 +424,21 @@ FVECDEF void fvec_pop(void **vector, unsigned int index) {
   if(ceil(log2(v_data->length)) == floor(log2(v_data->length))) {
     fvec_shrink(&v_data);
   }
+
+  *vector = &v_data->buffer;
+}
+
+/*
+** @brief:   Shrink the allocation of a vector to nearest highest power of 2 based on the length (useful with FVEC_NO_RESIZE, though the vec *cannot* be re-expanded as of now)
+** @params:  vector {void **} - fat pointer to shrink allocation to length
+** @returns: N/A
+*/
+FVECDEF void fvec_shrink_to_fit(void **vector) {
+  FVecData *v_data = fvec_get_data(*vector);
+
+  v_data->capacity = (v_data->length == 0) ? 1 : pot(v_data->length);
+  v_data->bytes_alloc = v_data->capacity * v_data->element_size;
+  v_data = realloc(v_data, sizeof(FVecData) + v_data->bytes_alloc);
 
   *vector = &v_data->buffer;
 }
