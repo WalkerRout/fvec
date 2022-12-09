@@ -1,7 +1,7 @@
 # fvec
 > Dynamically sized vector in C, implemented using fat pointers
 
-Example:
+Standard example with automatic reallocations:
 
 ```C
 #include <stdio.h>
@@ -59,6 +59,46 @@ int main(void) {
   // free the data behind the vectors
   fvec_free(&data);
   fvec_free(&odds);
+  
+  return 0;
+}
+```
+
+Example without automatic reallocations:
+
+```C
+#include <stdio.h>
+
+#define FVEC_IMPLEMENTATION
+#define FVEC_NO_RESIZE
+#include "fvec.h"
+#undef  FVEC_IMPLEMENTATION
+
+int main(void) {
+  // cap will be made highest closest power of 2
+  // ie.. 33 <= x <= 64 -> capacity = 64
+  // or alternatively;
+  // capacity = 2^(n-1)+1 <= x <= 2^n = 2^n
+  int *data = fvecci(sizeof(int), 60); // capacity will be set to 64
+
+  // fill vector
+  for(int i = 0; i < fvec_capacity(data); ++i)
+    *(int*)fvec_push(&data) = i;
+
+  // remove back half of the elements; need to shrink uneccessary allocation
+  for(int i = 0; i < fvec_capacity(data) / 2; ++i)
+    fvec_pop_back(&data);
+    
+  printf("Initial cap %d, len: %d\n", fvec_capacity(data), fvec_length(data));
+  // "Initial cap 64, len: 32\n" (cap is always a power of 2)
+
+  // shrink the allocation to fit current length
+  fvec_shrink_to_fit(&data);
+  
+  printf("After cap %d, len: %d\n", fvec_capacity(data), fvec_length(data));
+  // "After cap 32, len: 32\n"
+  
+  fvec_free(&data);
   
   return 0;
 }
