@@ -573,7 +573,6 @@ FVECDEF void fvec_print(void *vector, void(*print_func)(void*)) {
 /*
 ** TODO:
 ** - fvec_clear(void *default_value) -> create a default value and pass its address to set everything to it
-** - fvec_shrink_to_fit(); -> shrink the current allocation to fit the length
 ** - ...
 **
 */
