@@ -377,7 +377,7 @@ FVECDEF void fvec_pop_back(void **vector) {
   v_data->length -= 1;
   
   // if its a power of 2...
-  if(ceil(log2(v_data->length)) == floor(log2(v_data->length))) {
+  if(is_pot(v_data->length)) {
     fvec_shrink(&v_data);
   }
 
@@ -431,7 +431,7 @@ FVECDEF void fvec_pop(void **vector, unsigned int index) {
   memcpy(dest, src, length);
   
   // if its a power of 2...
-  if(ceil(log2(v_data->length)) == floor(log2(v_data->length))) {
+  if(is_pot(v_data->length)) {
     fvec_shrink(&v_data);
   }
 
