@@ -240,8 +240,6 @@ FVECHELP void __fvec_shrink_nr(FVecData **_v_data) {
 */
 
 /*
-** @FFs:      !!! FEATURE FLAGS !!!
-**
 ** @brief:   Create a fat pointer vector able to contain elements of size element_size
 ** @params:  element_size {unsigned int} - size of each element in the vector
 ** @returns: {void *} - pointer to buffer of vector
