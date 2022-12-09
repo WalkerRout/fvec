@@ -52,6 +52,14 @@ extern "C" {
 
 // -----------------------------------------
 /*
+** POSSIBLE FEATURE FLAGS
+*/
+// - FVEC_NO_RESIZE
+// - ...
+// -----------------------------------------
+
+// -----------------------------------------
+/*
 ** FAT POINTER VECTOR DATA FORWARD DEFINITION
 */
 typedef struct _FVecData FVecData;
@@ -73,13 +81,18 @@ FVECDEF void fvec_map(void *vector, void(*func)(void*));
 FVECDEF void fvec_filter(void **dest_vector, void *src_vector, int(*predicate)(void*));
 FVECDEF void fvec_fold(void *vector, void *base, void(*binop)(void*, void*));
 FVECDEF unsigned int fvec_length(void *vector);
+FVECDEF unsigned int fvec_element_size(void *vector);
+FVECDEF unsigned int fvec_capacity(void *vector);
+FVECDEF unsigned int fvec_bytes_alloc(void *vector);
 FVECDEF void fvec_free(void **vector);
 FVECDEF void fvec_print(void *vector, void(*print_func)(void*));
 // Helpers:
 // - FVECHELP unsigned int pot(unsigned int x);
-// - FVECHELP inline int fvec_has_space(FVecData *v_data);
-// - FVECHELP inline void fvec_expand(FVecData **_v_data);
-// - FVECHELP inline void fvec_shrink(FVecData **_v_data);
+// - FVECHELP int fvec_has_space(FVecData *v_data);
+// - FVECHELP void fvec_expand(FVecData **_v_data);
+// - FVECHELP void __fvec_expand_nr(FVecData **_v_data); // feature flag
+// - FVECHELP void fvec_shrink(FVecData **_v_data);
+// - FVECHELP void __fvec_shrink_nr(FVecData **_v_data); // feature flag
 // -----------------------------------------
 #endif // FVEC_H
 
@@ -138,8 +151,7 @@ FVECHELP unsigned int pot(unsigned int x) {
 ** @returns: {int} - a boolean value representing whether or not the vector has space
 */
 FVECHELP int fvec_has_space(FVecData *v_data) {
-  //assert(v_data->bytes_alloc == (v_data->capacity * v_data->element_size));
-  return (v_data->bytes_alloc - (v_data->length * v_data->element_size)) > 0;
+  return ((long int)v_data->bytes_alloc - ((long int)v_data->length * (long int)v_data->element_size)) > 0;
 }
 
 /*
@@ -168,6 +180,22 @@ FVECHELP void fvec_expand(FVecData **_v_data) {
 }
 
 /*
+** @FFs:      !!! FEATURE FLAGS !!!
+**
+** @brief:   Expand a vector's allocation in no-resize mode -> no-op
+** @params:  _v_data {FVecData **} - the vector to no-op
+** @returns: N/A
+*/
+#ifdef FVEC_NO_RESIZE
+#define fvec_expand __fvec_expand_nr
+#endif // FVEC_NO_RESIZE
+FVECHELP void __fvec_expand_nr(FVecData **_v_data) {
+  FVecData *v_data = *_v_data;
+  assert(v_data->length <= v_data->capacity && "Invalid operation in no-resize mode! No more room in vector!");
+  assert(v_data->bytes_alloc == (v_data->capacity * v_data->element_size));
+}
+
+/*
 ** @brief:   Shrink a vector's allocation if the length is a power of 2
 ** @params:  _v_data {FVecData **} - the vector to expand
 ** @returns: N/A
@@ -177,18 +205,31 @@ FVECHELP void fvec_shrink(FVecData **_v_data) {
   assert(v_data->capacity >= v_data->length);
   assert(v_data->bytes_alloc == (v_data->capacity * v_data->element_size));
 
-  // if its a power of 2...
-  if(ceil(log2(v_data->length)) == floor(log2(v_data->length))) {
-    // know length is a power of two, capacity remains consistent
-    v_data->capacity = v_data->length;
-    v_data->bytes_alloc = v_data->element_size * v_data->length;
-    // shrink allocation
-    *_v_data = realloc(*_v_data, sizeof(FVecData) + v_data->bytes_alloc);
-    if(v_data == NULL) {
-      fprintf(stderr, "Unable to reallocate vector after shrinking vector!\n");
-      exit(1);
-    }
+  // know length is a power of two, capacity remains consistent
+  v_data->capacity = v_data->length;
+  v_data->bytes_alloc = v_data->element_size * v_data->length;
+  // shrink allocation
+  *_v_data = realloc(*_v_data, sizeof(FVecData) + v_data->bytes_alloc);
+  if(v_data == NULL) {
+    fprintf(stderr, "Unable to reallocate vector after shrinking vector!\n");
+    exit(1);
   }
+}
+
+/*
+** @FFs:      !!! FEATURE FLAGS !!!
+**
+** @brief:   Shrink a vector's allocation in no-resize mode -> no-op
+** @params:  _v_data {FVecData **} - the vector to no-op
+** @returns: N/A
+*/
+#ifdef FVEC_NO_RESIZE
+#define fvec_shrink __fvec_shrink_nr
+#endif // FVEC_NO_RESIZE
+FVECHELP void __fvec_shrink_nr(FVecData **_v_data) {
+  FVecData *v_data = *_v_data;
+  assert(v_data->length <= v_data->capacity && "Invalid operation in no-resize mode! No more room in vector!");
+  assert(v_data->bytes_alloc == (v_data->capacity * v_data->element_size));
 }
 
 // -----------------------------------------
@@ -199,6 +240,8 @@ FVECHELP void fvec_shrink(FVecData **_v_data) {
 */
 
 /*
+** @FFs:      !!! FEATURE FLAGS !!!
+**
 ** @brief:   Create a fat pointer vector able to contain elements of size element_size
 ** @params:  element_size {unsigned int} - size of each element in the vector
 ** @returns: {void *} - pointer to buffer of vector
@@ -211,7 +254,7 @@ FVECDEF void *fvec(unsigned int element_size) {
   }
   
   v->element_size = element_size;
-  v->capacity = 0;
+  v->capacity = 1;
   v->length = 0;
   v->bytes_alloc = v->capacity * element_size; // also 0
 
@@ -294,7 +337,7 @@ FVECDEF void *fvec_clone(void *vector) {
 FVECDEF void *fvec_push(void **vector) {
   assert(vector);
   FVecData *v_data = fvec_get_data(*vector);
-  
+
   if(!fvec_has_space(v_data)) {
     fvec_expand(&v_data);
   }
@@ -324,7 +367,10 @@ FVECDEF void fvec_pop_back(void **vector) {
   
   v_data->length -= 1;
   
-  fvec_shrink(&v_data);
+  // if its a power of 2...
+  if(ceil(log2(v_data->length)) == floor(log2(v_data->length))) {
+    fvec_shrink(&v_data);
+  }
 
   *vector = &v_data->buffer;
 }
@@ -343,7 +389,10 @@ FVECDEF void fvec_pop_front(void **vector) {
 
   memcpy(v_data->buffer, v_data->buffer + v_data->element_size, v_data->length * v_data->element_size);
   
-  fvec_shrink(&v_data);
+  // if its a power of 2...
+  if(ceil(log2(v_data->length)) == floor(log2(v_data->length))) {
+    fvec_shrink(&v_data);
+  }
 
   *vector = &v_data->buffer;
 }
@@ -372,7 +421,10 @@ FVECDEF void fvec_pop(void **vector, unsigned int index) {
 
   memcpy(dest, src, length);
   
-  fvec_shrink(&v_data);
+  // if its a power of 2...
+  if(ceil(log2(v_data->length)) == floor(log2(v_data->length))) {
+    fvec_shrink(&v_data);
+  }
 
   *vector = &v_data->buffer;
 }
@@ -444,6 +496,36 @@ FVECDEF unsigned int fvec_length(void *vector) {
 }
 
 /*
+** @brief:   Get the element_size of a fat pointer vector
+** @params:  vector {void *} - target for element_size
+** @returns: {unsigned int} - element_size of the vector
+*/
+FVECDEF unsigned int fvec_element_size(void *vector) {
+  FVecData *v_data = fvec_get_data(vector);
+  return v_data->element_size;
+}
+
+/*
+** @brief:   Get the capacity of a fat pointer vector
+** @params:  vector {void *} - capacity for length
+** @returns: {unsigned int} - capacity of the vector
+*/
+FVECDEF unsigned int fvec_capacity(void *vector) {
+  FVecData *v_data = fvec_get_data(vector);
+  return v_data->capacity;
+}
+
+/*
+** @brief:   Get the bytes_alloc of a fat pointer vector
+** @params:  vector {void *} - target for bytes_alloc
+** @returns: {unsigned int} - bytes_alloc of the vector
+*/
+FVECDEF unsigned int fvec_bytes_alloc(void *vector) {
+  FVecData *v_data = fvec_get_data(vector);
+  return v_data->bytes_alloc;
+}
+
+/*
 ** @brief:   Print a fat pointer vector
 ** @params:  vector {void *} - vector to print, print_func {void(*)(void*)} - function pointer to user function for printing elements (no newline expected)
 ** @returns: N/A
@@ -467,8 +549,6 @@ FVECDEF void fvec_print(void *vector, void(*print_func)(void*)) {
 /*
 ** TODO:
 ** - fvec_clear(void *default_value) -> create a default value and pass its address to set everything to it
-** - add no-resize functions for faster operations, ie... fvec_pop_back_nr() will not resize the vector if the allocation drops
-**   - maybe add a macro for no resize? ie... #define FVEC_NO_RESIZE and then #ifdef FVEC_NO_RESIZE #define fvec_pop fvec_pop_nr ... #endif
 ** - fvec_shrink_to_fit(); -> shrink the current allocation to fit the length
 ** - ...
 **
