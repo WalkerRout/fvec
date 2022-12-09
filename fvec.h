@@ -10,7 +10,7 @@
 ** @description:  This library implements fat pointer vectors that are able
 **                to theoretically hold anything of the same size. It goes
 **                without saying that this entire library is quite hacky,
-**                probably non portable, but cool as shit.
+**                probably non portable, and pretty dang neat.
 **
 ** @WARNING:      TAKE EXTREME CAUTION WHEN USING THIS LIBRARY. ALL BEHAVIOUR
 **                IS DECIDED BY THE USER.
