@@ -358,10 +358,9 @@ FVECDEF void *fvec_push(void **vector) {
 
   // make sure to increment the length
   *vector = &v_data->buffer;
-  // return a void pointer to the next available slot in the vector (0 indexed, sub1)
-  void *res = *vector + v_data->element_size * (v_data->length-1);
   
-  return res;
+  // return a void pointer to the next available slot in the vector (0 indexed, sub1)
+  return *vector + v_data->element_size * (v_data->length - 1);
 }
 
 /*
@@ -396,7 +395,11 @@ FVECDEF void fvec_pop_front(void **vector) {
   
   v_data->length -= 1;
 
-  memcpy(v_data->buffer, v_data->buffer + v_data->element_size, v_data->length * v_data->element_size);
+  void *dest = v_data->buffer;
+  void *src  = v_data->buffer + v_data->element_size;
+  unsigned int length = v_data->length * v_data->element_size;
+  
+  memcpy(dest, src, length);
   
   // if its a power of 2...
   if(is_pot(v_data->length)) {
@@ -424,9 +427,9 @@ FVECDEF void fvec_pop(void **vector, unsigned int index) {
   
   v_data->length -= 1;
 
-  void *dest = v_data->buffer + index*v_data->element_size;
-  void *src  = v_data->buffer + (1 + index)*v_data->element_size;
-  unsigned int length = v_data->length*v_data->element_size - index*v_data->element_size;
+  void *dest = v_data->buffer + index * v_data->element_size;
+  void *src  = v_data->buffer + (1 + index) * v_data->element_size;
+  unsigned int length = v_data->length * v_data->element_size - index * v_data->element_size;
 
   memcpy(dest, src, length);
   
