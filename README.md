@@ -1,6 +1,6 @@
 # fvec
 > Dynamically sized vector in C, implemented using fat pointers.<br>
-> **Forewarning:** This is probably the hackiest project I have ever written, I mainly wrote it for fun/as an exercise, so the performance may not be fantastic.
+> **Forewarning:** This is probably the hackiest project I have ever written, I mainly wrote it for fun/as an exercise, so the performance may not be fantastic (though, from my experience, it is quite fast).
 > If performance is the goal, use fvec_pop_back and FVEC_NO_RESIZE mode (other fvec_pop_* functions use memcpy to shift elements in O(n) time).
 
 Standard example with automatic reallocations:
