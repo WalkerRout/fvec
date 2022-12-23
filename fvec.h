@@ -71,6 +71,7 @@ typedef struct _FVecData FVecData;
 */
 FVECDEF void *fvec(unsigned int element_size);
 FVECDEF void *fvecci(unsigned int element_size, unsigned int initial_size);
+FVECDEF void *fvec_from_ptr(void *ptr, unsigned int length, unsigned int element_size);
 FVECDEF FVecData *fvec_get_data(void *vector);
 FVECDEF void *fvec_get(void *vector, unsigned int index);
 FVECDEF void *fvec_push(void **vector);
@@ -78,6 +79,7 @@ FVECDEF void fvec_pop_back(void **vector);
 FVECDEF void fvec_pop_front(void **vector);
 FVECDEF void fvec_pop(void **vector, unsigned int index);
 FVECDEF void fvec_shrink_to_fit(void **vector);
+FVECDEF void fvec_clear(void *vector, void *default_value);
 FVECDEF void fvec_map(void *vector, void(*func)(void*));
 FVECDEF void fvec_filter(void **dest_vector, void *src_vector, int(*predicate)(void*));
 FVECDEF void fvec_fold(void *vector, void *base, void(*binop)(void*, void*));
@@ -293,6 +295,34 @@ FVECDEF void *fvecci(unsigned int element_size, unsigned int initial_size) {
 }
 
 /*
+** @WARNING: !!! TAKE PRECAUTIONS THAT PTR POINTS TO VALID DATA WITH A PROPER LENGTH !!!
+**
+** @brief:   Create a fat pointer vector from an initial array provided by ptr
+** @params:  ptr {void *} - pointer to data to copy into a vector, length {unsigned int} - the length of ptr, element_size {unsigned int} - the size of each element in ptr
+** @returns: {void *} - pointer to buffer of vector
+*/
+FVECDEF void *fvec_from_ptr(void *ptr, unsigned int length, unsigned int element_size) {
+  assert(ptr);
+  
+  unsigned int initial_size = pot(length);
+  
+  FVecData* v = calloc(1, sizeof(FVecData) + initial_size * element_size);
+  if(v == NULL) {
+    fprintf(stderr, "Unable to calloc vector in fvec_from_ptr!\n");
+    exit(1);
+  }
+  
+  v->element_size = element_size;
+  v->capacity = initial_size; // create a capacity rounded up to a multiple of 2 from initial_size
+  v->length = length;
+  v->bytes_alloc = v->capacity * element_size; // also 0
+
+  memcpy(&v->buffer, ptr, element_size * length);
+  
+  return &v->buffer;
+}
+
+/*
 ** @WARNING: !!! TAKE PRECAUTIONS THAT VECTOR POINTS TO VALID DATA !!!
 **
 ** @brief:   Get the data behind a vector fat pointer
@@ -347,14 +377,12 @@ FVECDEF void *fvec_push(void **vector) {
   assert(vector);
   FVecData *v_data = fvec_get_data(*vector);
 
-  if(!fvec_has_space(v_data)) {
+  if(!fvec_has_space(v_data))
     fvec_expand(&v_data);
-  }
 
   v_data->length += 1;
-  if(!fvec_has_space(v_data)) {
+  if(!fvec_has_space(v_data))
     fvec_expand(&v_data);
-  }
 
   // make sure to increment the length
   *vector = &v_data->buffer;
@@ -376,9 +404,8 @@ FVECDEF void fvec_pop_back(void **vector) {
   v_data->length -= 1;
   
   // if its a power of 2...
-  if(is_pot(v_data->length)) {
+  if(is_pot(v_data->length))
     fvec_shrink(&v_data);
-  }
 
   *vector = &v_data->buffer;
 }
@@ -402,9 +429,8 @@ FVECDEF void fvec_pop_front(void **vector) {
   memcpy(dest, src, length);
   
   // if its a power of 2...
-  if(is_pot(v_data->length)) {
+  if(is_pot(v_data->length))
     fvec_shrink(&v_data);
-  }
 
   *vector = &v_data->buffer;
 }
@@ -434,9 +460,8 @@ FVECDEF void fvec_pop(void **vector, unsigned int index) {
   memcpy(dest, src, length);
   
   // if its a power of 2...
-  if(is_pot(v_data->length)) {
+  if(is_pot(v_data->length))
     fvec_shrink(&v_data);
-  }
 
   *vector = &v_data->buffer;
 }
@@ -454,6 +479,20 @@ FVECDEF void fvec_shrink_to_fit(void **vector) {
   v_data = realloc(v_data, sizeof(FVecData) + v_data->bytes_alloc);
 
   *vector = &v_data->buffer;
+}
+
+/*
+** @brief:   Set all element in a vector to a default value
+** @params:  vector {void *} - fat pointer vector to clear, default_value {void *} - pointer to default element specified by user
+** @returns: N/A
+*/
+FVECDEF void fvec_clear(void *vector, void *default_value) {
+  assert(vector);
+  assert(default_value && "Default value may not be NULL!");
+  FVecData *v_data = fvec_get_data(vector);
+
+  for(int i = 0; i < v_data->length; ++i)
+    memcpy(fvec_get(vector, i), default_value, v_data->element_size);
 }
 
 /*
@@ -502,17 +541,6 @@ FVECDEF void fvec_fold(void *vector, void *base, void(*binop)(void*, void*)) {
 }
 
 /*
-** @brief:   Free a fat pointer vector (also sets pointer to NULL)
-** @params:  vector {void **} - reference to vector to free
-** @returns: N/A 
-*/
-FVECDEF void fvec_free(void **vector) {
-  FVecData *v_data = fvec_get_data(*vector);
-  free(v_data);
-  *vector = NULL;
-}
-
-/*
 ** @brief:   Get the length of a fat pointer vector
 ** @params:  vector {void *} - target for length
 ** @returns: {unsigned int} - length of the vector
@@ -553,6 +581,17 @@ FVECDEF unsigned int fvec_bytes_alloc(void *vector) {
 }
 
 /*
+** @brief:   Free a fat pointer vector (also sets pointer to NULL)
+** @params:  vector {void **} - reference to vector to free
+** @returns: N/A 
+*/
+FVECDEF void fvec_free(void **vector) {
+  FVecData *v_data = fvec_get_data(*vector);
+  free(v_data);
+  *vector = NULL;
+}
+
+/*
 ** @brief:   Print a fat pointer vector
 ** @params:  vector {void *} - vector to print, print_func {void(*)(void*)} - function pointer to user function for printing elements (no newline expected)
 ** @returns: N/A
@@ -577,7 +616,5 @@ FVECDEF void fvec_print(void *vector, void(*print_func)(void*)) {
 ** TODO:
 ** - fvec_push -> rename to fvec_push_back
 ** - fvec_push_front() -> push a value into the front of the vector
-** - fvec_clear(void *default_value) -> create a default value and pass its address to set everything to it
-** - fvec_from_ptr(void *ptr, uint length, uint element_size);
 **
 */
