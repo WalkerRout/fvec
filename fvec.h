@@ -267,7 +267,7 @@ FVECDEF void *fvec(unsigned int element_size) {
   v->element_size = element_size;
   v->capacity = 1;
   v->length = 0;
-  v->bytes_alloc = v->capacity * element_size; // also 0
+  v->bytes_alloc = v->capacity * element_size;
 
   return &v->buffer;
 }
@@ -289,7 +289,7 @@ FVECDEF void *fvecci(unsigned int element_size, unsigned int initial_size) {
   v->element_size = element_size;
   v->capacity = initial_size; // create a capacity rounded up to a multiple of 2 from initial_size
   v->length = 0;
-  v->bytes_alloc = v->capacity * element_size; // also 0
+  v->bytes_alloc = v->capacity * element_size;
   
   return &v->buffer;
 }
@@ -315,7 +315,7 @@ FVECDEF void *fvec_from_ptr(void *ptr, unsigned int length, unsigned int element
   v->element_size = element_size;
   v->capacity = initial_size; // create a capacity rounded up to a multiple of 2 from initial_size
   v->length = length;
-  v->bytes_alloc = v->capacity * element_size; // also 0
+  v->bytes_alloc = v->capacity * element_size;
 
   memcpy(&v->buffer, ptr, element_size * length);
   
