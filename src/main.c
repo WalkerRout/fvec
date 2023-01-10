@@ -43,7 +43,7 @@ int main(void) {
   printf("Result is: %d\n", result);
 
   int *odds = fvec(sizeof(int));
-  fvec_filter(&odds, data, is_odd);
+  fvec_filter(data, &odds, is_odd);
   
   fvec_print(data, print);
   fvec_print(odds, print);
