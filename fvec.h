@@ -81,7 +81,7 @@ FVECDEF void fvec_pop(void **vector, unsigned int index);
 FVECDEF void fvec_shrink_to_fit(void **vector);
 FVECDEF void fvec_clear(void *vector, void *default_value);
 FVECDEF void fvec_map(void *vector, void(*func)(void*));
-FVECDEF void fvec_filter(void **dest_vector, void *src_vector, int(*predicate)(void*));
+FVECDEF void fvec_filter(void *src_vector, void **dest_vector, int(*predicate)(void*));
 FVECDEF void fvec_fold(void *vector, void *base, void(*binop)(void*, void*));
 FVECDEF unsigned int fvec_length(void *vector);
 FVECDEF unsigned int fvec_element_size(void *vector);
@@ -510,10 +510,10 @@ FVECDEF void fvec_map(void *vector, void (*func)(void*)) {
 
 /*
 ** @brief:   Push items that meet a predicate to the back of a destination vector
-** @params:  dest_vector {void *} - target the elements are inserted into, src_vector {void *} - vector being filtered, func {void(*)(void*)} - a predicate to apply to each element of src_vector
+** @params:  src_vector {void *} - vector being filtered, dest_vector {void **} - target the elements are inserted into, func {void(*)(void*)} - a predicate to apply to each element of src_vector
 ** @returns: N/A
 */
-FVECDEF void fvec_filter(void **dest_vector, void *src_vector, int(*predicate)(void*)) {
+FVECDEF void fvec_filter(void *src_vector, void **dest_vector, int(*predicate)(void*)) {
   assert(*dest_vector);
   assert(src_vector);
   FVecData *v_data = fvec_get_data(src_vector);
