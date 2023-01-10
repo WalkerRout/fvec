@@ -52,7 +52,7 @@ int main(void) {
   
   // create a new vector filled with all odd numbers in data
   int *odds = fvec(sizeof(int));
-  fvec_filter(&odds, data, is_odd);
+  fvec_filter(data, &odds, is_odd);
   
   // print the vectors
   fvec_print(data, print);
