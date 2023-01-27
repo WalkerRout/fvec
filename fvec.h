@@ -614,6 +614,8 @@ FVECDEF void fvec_print(void *vector, void(*print_func)(void*)) {
 
 /*
 ** TODO:
+** - fvec_iter() -> function called 'fvec_iter_next()' steps the iterator by the size of the element
+**   - use a union to represent the iterator's return value (inspect if bits are equal to some flag value)
 ** - fvec_push -> rename to fvec_push_back
 ** - fvec_push_front() -> push a value into the front of the vector
 **
